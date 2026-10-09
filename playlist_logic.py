@@ -57,6 +57,12 @@ def normalize_song(raw: Song) -> Song:
     }
 
 
+def song_key(song: Song) -> Tuple[str, str]:
+    """Return a (title, artist) key used to detect duplicate songs."""
+    normalized = normalize_song(song)
+    return (str(normalized["title"]).lower(), str(normalized["artist"]))
+
+
 def classify_song(song: Song, profile: Dict[str, object]) -> str:
     """Return a mood label given a song and user profile."""
     energy = song.get("energy", 0)

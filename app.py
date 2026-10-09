@@ -10,7 +10,11 @@ from playlist_logic import (
     merge_playlists,
     normalize_song,
     search_songs,
+    song_key,
 )
+
+# Shared by the profile and add-song genre dropdowns.
+GENRE_OPTIONS = ["rock", "lofi", "pop", "jazz", "electronic", "ambient", "other"]
 
 
 def init_state():
@@ -212,7 +216,7 @@ def profile_sidebar():
 
     profile["favorite_genre"] = st.sidebar.selectbox(
         "Favorite genre",
-        options=["rock", "lofi", "pop", "jazz", "electronic", "ambient", "other"],
+        options=GENRE_OPTIONS,
         index=0,
     )
 
@@ -232,7 +236,7 @@ def add_song_sidebar():
     artist = st.sidebar.text_input("Artist")
     genre = st.sidebar.selectbox(
         "Genre",
-        options=["rock", "lofi", "pop", "jazz", "electronic", "ambient", "other"],
+        options=GENRE_OPTIONS,
     )
     energy = st.sidebar.slider("Energy", min_value=1, max_value=10, value=5)
     tags_text = st.sidebar.text_input("Tags (comma separated)")
@@ -250,19 +254,12 @@ def add_song_sidebar():
         }
         # FIX: strip input first so whitespace-only titles/artists are rejected.
         if title.strip() and artist.strip():
-            normalized = normalize_song(song)
             # FIX: skip duplicates (same title + artist after normalization).
-            key = (normalized["title"].lower(), normalized["artist"])
-            existing = {
-                (normalize_song(s)["title"].lower(), normalize_song(s)["artist"])
-                for s in st.session_state.songs
-            }
-            if key in existing:
+            existing = {song_key(s) for s in st.session_state.songs}
+            if song_key(song) in existing:
                 st.sidebar.warning("That song is already in your library.")
             else:
-                all_songs = st.session_state.songs[:]
-                all_songs.append(normalized)
-                st.session_state.songs = all_songs
+                st.session_state.songs = st.session_state.songs + [normalize_song(song)]
         else:
             st.sidebar.warning("Title and artist are required.")
 
